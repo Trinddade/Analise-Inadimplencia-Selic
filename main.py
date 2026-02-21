@@ -235,20 +235,16 @@ button:hover {
 <h1>Painel Econômico</h1>
 
 <div class="icon-menu">
-    <div class="icon-card" onclick="navigate(this, '/consultar')">
-        <i class="ri-database-2-line"></i>
-        <span>Inadimplência</span>
-    </div>
+   
 
-    <div class="icon-card" onclick="navigate(this, '/graficos')">
-        <i class="ri-bar-chart-box-line"></i>
-        <span>Gráficos</span>
-    </div>
+    <a href='/consultar'> Consultar</a>
 
-    <div class="icon-card">
-        <i class="ri-edit-2-line"></i>
-        <span>Editar Dados</span>
-    </div>
+    <a href='/editar_selic'> Editar Selic</a>
+                                  
+    <a href='/graficos'>graficos</a>
+
+    <a href='/editar_inadimplencia'>Editar Dados</a>
+
 
     <div class="icon-card correlacao" onclick="navigate(this, '/correlacao')">
         <i class="ri-node-tree"></i>
@@ -256,50 +252,23 @@ button:hover {
     </div>
 </div>
 
-<form>
+<form action="/upload" method="POST" enctype="multipart/form-data">
 
-    <div class="upload-group">
+
         <label class="upload-label">Arquivo de Inadimplência</label>
-        <input type="file" id="inad" class="file-input">
-        <label for="inad" class="file-box">
-            <i class="ri-upload-cloud-2-line"></i>
-            <span class="file-name" id="name-inad">Selecionar arquivo...</span>
-        </label>
-    </div>
+        <input type="file" name="campo_inadimplencia">
+        
 
-    <div class="upload-group">
         <label class="upload-label">Arquivo de Taxa Selic</label>
-        <input type="file" id="selic" class="file-input">
-        <label for="selic" class="file-box">
-            <i class="ri-upload-cloud-2-line"></i>
-            <span class="file-name" id="name-selic">Selecionar arquivo...</span>
-        </label>
-    </div>
+        <input type="file" name="campo_selic">
+    
+
 
     <button type="submit">Fazer Upload</button>
 
 </form>
 
 </div>
-
-<script>
-function navigate(element, url) {
-    element.classList.add("active");
-    setTimeout(() => {
-        window.location.href = url;
-    }, 300);
-}
-
-document.getElementById("inad").addEventListener("change", function(){
-    document.getElementById("name-inad").textContent =
-        this.files.length ? this.files[0].name : "Selecionar arquivo...";
-});
-
-document.getElementById("selic").addEventListener("change", function(){
-    document.getElementById("name-selic").textContent =
-        this.files.length ? this.files[0].name : "Selecionar arquivo...";
-});
-</script>
 
 </body>
 </html>
@@ -317,14 +286,14 @@ def upload():
     inad_df = pd.read_csv(
         inad_file,
         sep = ";",
-        name = ['data','inadimplencia'],
+        names = ['data','inadimplencia'],
         header = 0
     )
 
     selic_df = pd.read_csv(
         selic_file,
         sep = ";",
-        name = ['data', 'selic_diaria'],
+        names = ['data', 'selic_diaria'],
         header = 0
     )
 
@@ -335,13 +304,107 @@ def upload():
     selic_df['mes'] = selic_df['data'].dt.to_period('M').astype(str)
 
     inad_mensal = inad_df[['mes', 'inadimplencia']].drop_duplicates()
-    selic_mensal = selic_df.grouby('mes')['selic_diaria'].mean().reset_index()
+    selic_mensal = selic_df.groupby('mes')['selic_diaria'].mean().reset_index()
 
     with sqlite3.connect(DB_PATH) as conn:
-        inad_mensal.to_sql('inadimplencia', conn, if_exists = 'replace', index = 'False') 
-        selic_mensal.to_sql('inadimplencia', conn, if_exists = 'replace', index = 'False')
+        inad_mensal.to_sql('inadimplencia', conn, if_exists = 'replace', index = False) 
+        selic_mensal.to_sql('selic', conn, if_exists = 'replace', index = False)
 
     return jsonify({'Mensagem':'Dados armazenados com sucesso.'})
+
+@app.route('/consultar', methods=['POST','GET'])
+def consultar():
+    # Reservando a Vaga
+    if request.method == "POST":
+        tabela = request.form.get('campo_tabela')
+
+        if tabela not in ['inadimplencia','selic']:
+            return jsonify({'Erro','Tabela Inválida'})
+        
+        with sqlite3.connect(DB_PATH) as conn:
+            df = pd.read_sql_query(f"SELECT * FROM {tabela}", conn)
+        return df.to_html(index=False)
+
+    return render_template_string('''
+    <h1> Consultar de Tabela </h1>
+    <form method="POST" action="/consultar">
+        <label> Escolha a Tabela</label>
+        <select name="campo_tabela">
+            <option value="inadimplencia"> Inadimplencia </option>
+            <option value="selic"> Taxa Selic </option>
+        </select>
+        <input type="submit" value=" consultar ">                                      
+    </form>
+    <br>
+    <a href="/"> Voltar </a>
+''')
+
+@app.route('/editar_inadimplencia', methods=['POST','GET'])
+def editar_inadimplencia():
+
+    if request.method == "POST":
+        mes = request.form.get('campo_mes')
+        novo_valor = request.form.get('campo_valor')
+
+        try:
+            novo_valor = float(novo_valor)
+        except:
+            return jsonify({'Erro':'Valor invalido'})
+        
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE inadimplencia SET inadimplencia = ? WHERE mes = ?", (novo_valor, mes))
+            conn.commit()
+        return jsonify({'Mensagem':f'Valor atualizado com sucesso para {mes}'}) 
+
+    return render_template_string('''
+    <h1> Editar Inadimplencia</h1>
+    <form method="POST" action="/editar_inadimplencia">
+        <label for="campo_mes"> Mes (AAAA-MM) </label>
+        <input type="text" name="campo_mes">
+        </input><br>
+        <label for="campo_valor"> Novo Valor de Inadimplencia </label>
+        <input type="text" name="campo_valor">
+        </input><br>
+        <input type="submit" value=" Atualizar Dados "
+        <br>
+        <a href="/"> Voltar </a>           
+    </form>
+''')
+
+@app.route('/editar_selic', methods=['POST','GET'])
+def editar_selic():
+   
+   if request.method == 'POST':
+       mes = request.form.get('campo_mes')
+       novo_valor = request.form.get('campo_selic')
+
+       try:
+            novo_valor = float(novo_valor)
+       except:
+            return jsonify({'Erro':'Valor invalido'})
+       
+       with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE selic SET selic_diaria = ? WHERE mes = ?", (novo_valor, mes))
+            conn.commit()
+       return jsonify({'Mensagem':f'Valor atualizado com sucesso para {mes}'})
+    
+
+   return render_template_string('''
+    <h1> Editar Selic</h1>
+    <form method="POST" action="/editar_selic">
+        <label for="campo_mes"> Mes (AAAA-MM) </label>
+        <input type="text" name="campo_mes">
+        </input><br>
+        <label for="campo_selic"> Novo Valor de selic</label>
+        <input type="text" name="campo_selic">
+        </input><br>
+        <input type="submit" value=" Atualizar Dados "
+        <br>
+        <a href="/"> Voltar </a>           
+    </form>
+''')
 
 if __name__ == '__main__':
     init_db()
