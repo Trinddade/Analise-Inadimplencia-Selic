@@ -244,11 +244,9 @@ button:hover {
     <a href='/graficos'>graficos</a>
 
     <a href='/editar_inadimplencia'>Editar Dados</a>
+                                  
+    <a href='/correlacao'> Correlação </a>
 
-
-    <div class="icon-card correlacao" onclick="navigate(this, '/correlacao')">
-        <i class="ri-node-tree"></i>
-        <span>Correlação</span>
     </div>
 </div>
 
@@ -405,6 +403,131 @@ def editar_selic():
         <a href="/"> Voltar </a>           
     </form>
 ''')
+
+@app.route('/graficos')
+def grafico():
+
+    with sqlite3.connect(DB_PATH) as conn:
+        inad_df = pd.read_sql_query('SELECT * FROM inadimplencia', conn)
+        selic_df = pd.read_sql_query('SELECT * FROM selic', conn)
+    fig1 = go.Figure() # criou a folha de papel
+    fig1.add_trace(go.Scatter(# determinando os discos, os graficos Scatter = grafico de dispersão
+            x = inad_df['mes'],
+            y = inad_df['inadimplencia'],
+            mode = 'lines+markers',
+            name = 'Inadimplencia'
+        )
+    ) # adicionar o grafico ggplot2, seaborn, simple_white, plotly, plotly_white
+    fig1.update_layout(
+        title = 'Evolução da Inadimplencia',
+        xaxis_title = 'Mes',
+        yaxis_title = '%',
+        template = 'plotly_dark'
+    )
+
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatter(
+        x = selic_df['mes'],
+        y = selic_df['selic_diaria'],
+        mode = 'lines+markers',
+        name = 'Selic'
+        )
+    )
+
+    fig2.update_layout(
+        title = 'Evolução da Taxa Selic',
+        xaxis_title = 'mes',
+        yaxis_title = 'valor',
+        template = 'plotly_dark'
+    )
+
+    grafico_html1 = fig1.to_html(full_html=False, include_plotlyjs='cdn') # transformou o grafico em um html
+    grafico_html2 = fig2.to_html(full_html=False, include_plotlyjs=False)
+
+    return render_template_string('''
+        <html>
+            <head>
+                <title>  Graficos Economicos </title>
+                <style>
+                    body{
+                        background-color: black;              
+                    }
+                    .container{
+                        display:flex;
+                        justify_content:space-around;          
+                    }
+                    .graph{
+                    with:48%; # pega 48% da tela              
+                    }
+                </style>
+            </head>
+            <body>
+                <h1> Graficos Economicos </h1>
+                <div class="container">
+                    <div class="graph"> {{ grafico1 |safe }} </div>
+                    <div class="graph"> {{ grafico2 |safe}} </div>
+                </div>
+            </body>                                          
+        </html>
+''', grafico1 = grafico_html1, grafico2 = grafico_html2)
+
+@app.route('/correlacao')
+def correlacao():
+
+    with sqlite3.connect(DB_PATH) as conn:
+        inad_df = pd.read_sql_query('SELECT * FROM inadimplencia', conn)
+        selic_df = pd.read_sql_query('SELECT * FROM selic', conn)
+
+    merged = pd.merge(inad_df, selic_df, on="mes") # marge na coluna de mes
+
+    '''
+    0 resultado da correl é:
+    1 :: quando a selic sobe, inadimplencia sobe perfeitamente (correlação positiva)
+    0 :: não existe correlação
+    -1 quando a selic sobe, inadimplencia cai perfeitamente (correlação negativa)
+    '''
+
+    correl = merged['inadimplencia'].corr(merged['selic_diaria']) # estou fazendo uma correlação da inadimplencia com a selic_diaria
+
+    # Regressão Linear para visualização.
+    x = merged['selic_diaria']
+    y = merged['inadimplencia']
+
+    '''
+    O polyfit retorna um array de polinomios, onde o grau 1 devolve dois valores
+    [m] sera nosso coeficiente angular (inclinação da reta)
+    [b] sera nosso coeficiente linear (intercepto(valor de y quando x = 0))
+    '''
+
+    m, b = np.polyfit(x, y, 1)
+    
+    return render_template_string('''
+    <html>
+            <head>
+                <title><marquee> Correlação Selic vs Inadimplencia </marquee></title>
+                <style>
+                body{
+                    font-family: Arial; 
+                    background-color: #ffffff; 
+                    color: #333;}
+                    .container{width:90%; margin auto; text-align:center;}
+                    h1{margin-top:40px;}
+                    a{text-decoration:none; color: #007bff;}
+                    a:hover{text-decoration:underline;}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1> Correlação Selic vs Inadimplencia </h1>
+                    <h4> Valor de Correlação: {{ v_correl|safe }} </h4>
+                    <div></div>
+                    <br>
+                    <div> <a href="/"> Voltar </a> </div>
+                </div>
+            </body>
+    </html>
+''', v_correl = correl)
+
 
 if __name__ == '__main__':
     init_db()
