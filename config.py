@@ -11,4 +11,4 @@ Versão: 0.0.0.1
 Último Release: 18/02/2026                 
 '''
 
-DB_PATH = "C:/Users/noturno/Desktop/LucasTrindade/dados.db"
+DB_PATH = "C:/Users/Lucas.Andrade/Desktop/Clarify-main/dados.db"
