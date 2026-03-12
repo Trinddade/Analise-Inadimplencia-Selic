@@ -1,44 +1,46 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-<meta charset="UTF-8">
-<title>Painel Econômico</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Painel Econômico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-<h1>Painel Econômico</h1>
+        <h1>Painel Econômico</h1>
 
-<div class="menu">
+        <div class="menu">
 
-<a href="/consultar">Consultar</a>
-<a href="/editar_selic">Editar Selic</a>
-<a href="/graficos">Gráficos</a>
-<a href="/editar_inadimplencia">Editar Dados</a>
-<a href="/correlacao">Correlação</a>
+            <a href="/consultar">Consultar</a>
+            <a href="/editar_selic">Editar Selic</a>
+            <a href="/graficos">Gráficos</a>
+            <a href="/editar_inadimplencia">Editar Dados</a>
+            <a href="/correlacao">Correlação</a>
 
-</div>
+        </div>
 
-<div class="card">
+        <div class="card">
 
-<form method="POST" action="/upload" enctype="multipart/form-data">
+            <form method="POST" action="/upload" enctype="multipart/form-data">
 
-<label>Arquivo de Inadimplência</label>
-<input type="file" name="arquivo_inad">
+                <label>Arquivo de Inadimplência</label>
+                <input type="file" name="arquivo_inad">
 
-<label>Arquivo Selic</label>
-<input type="file" name="arquivo_selic">
+                <label>Arquivo Selic</label>
+                <input type="file" name="arquivo_selic">
 
-<input type="submit" value="Upload">
+                <input type="submit" value="Upload">
 
-</form>
+            </form>
 
-</div>
+        </div>
 
-</div>
+    </div>
 
 </body>
+
 </html>

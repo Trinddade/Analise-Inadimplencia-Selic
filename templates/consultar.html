@@ -1,37 +1,39 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-<meta charset="UTF-8">
-<title>Consultar</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Consultar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-<h1>Consultar Tabela</h1>
+        <h1>Consultar Tabela</h1>
 
-<div class="card">
+        <div class="card">
 
-<form method="POST" action="/consultar">
+            <form method="POST" action="/consultar">
 
-<label>Escolha a tabela</label>
+                <label>Escolha a tabela</label>
 
-<select name="campo_tabela">
-<option value="inadimplencia">Inadimplência</option>
-<option value="selic">Taxa Selic</option>
-</select>
+                <select name="campo_tabela">
+                    <option value="inadimplencia">Inadimplência</option>
+                    <option value="selic">Taxa Selic</option>
+                </select>
 
-<input type="submit" value="Consultar">
+                <input type="submit" value="Consultar">
 
-</form>
+            </form>
 
-</div>
+        </div>
 
-<a class="voltar" href="/">Voltar</a>
+        <a class="voltar" href="/">Voltar</a>
 
-</div>
+    </div>
 
 </body>
+
 </html>

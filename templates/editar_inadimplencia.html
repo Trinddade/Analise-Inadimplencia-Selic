@@ -1,36 +1,38 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-<meta charset="UTF-8">
-<title>Editar Inadimplência</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Editar Inadimplência</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-<h1>Editar Inadimplência</h1>
+        <h1>Editar Inadimplência</h1>
 
-<div class="card">
+        <div class="card">
 
-<form method="POST" action="/editar_inadimplencia">
+            <form method="POST" action="/editar_inadimplencia">
 
-<label>Mês (AAAA-MM)</label>
-<input type="text" name="campo_mes">
+                <label>Mês (AAAA-MM)</label>
+                <input type="text" name="campo_mes">
 
-<label>Novo valor de inadimplência</label>
-<input type="text" name="campo_valor">
+                <label>Novo valor de inadimplência</label>
+                <input type="text" name="campo_valor">
 
-<input type="submit" value="Atualizar Dados">
+                <input type="submit" value="Atualizar Dados">
 
-</form>
+            </form>
 
-</div>
+        </div>
 
-<a class="voltar" href="/">Voltar</a>
+        <a class="voltar" href="/">Voltar</a>
 
-</div>
+    </div>
 
 </body>
+
 </html>
