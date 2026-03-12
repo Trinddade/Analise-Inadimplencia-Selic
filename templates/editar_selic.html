@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Editar Selic</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Editar Selic</h1>
+
+<div class="card">
+
+<form method="POST" action="/editar_selic">
+
+<label>Mês (AAAA-MM)</label>
+<input type="text" name="campo_mes">
+
+<label>Novo valor da Selic</label>
+<input type="text" name="campo_selic">
+
+<input type="submit" value="Atualizar Dados">
+
+</form>
+
+</div>
+
+<a class="voltar" href="/">Voltar</a>
+
+</div>
+
+</body>
+</html>
